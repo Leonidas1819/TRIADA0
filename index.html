@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>TRIADA ULTRA</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+background:linear-gradient(
+135deg,
+#0f172a,
+#1e293b,
+#020617
+);
+
+color:white;
+overflow:auto;
+}
+
+.screen{
+width:100vw;
+min-height:100vh;
+display:none;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+padding:20px;
+}
+
+.active{
+display:flex;
+}
+
+h1{
+font-size:50px;
+color:#38bdf8;
+text-shadow:0 0 20px #38bdf8;
+text-align:center;
+}
+
+.slogan{
+margin-top:15px;
+font-size:20px;
+color:#cbd5e1;
+text-align:center;
+width:80%;
+}
+
+.menu{
+margin-top:40px;
+display:flex;
+gap:25px;
+flex-wrap:wrap;
+justify-content:center;
+}
+
+.game-card{
+width:260px;
+min-height:220px;
+background:rgba(255,255,255,0.08);
+border:2px solid #38bdf8;
+border-radius:20px;
+padding:20px;
+transition:0.3s;
+cursor:pointer;
+backdrop-filter:blur(5px);
+}
+
+.game-card:hover{
+transform:scale(1.05);
+box-shadow:0 0 25px #38bdf8;
+}
+
+.game-card h2{
+color:#38bdf8;
+margin-bottom:15px;
+}
+
+.btn{
+margin-top:20px;
+padding:12px 25px;
+border:none;
+border-radius:10px;
+background:#38bdf8;
+color:black;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+}
+
+.btn:hover{
+background:white;
+}
+
+.topbar{
+position:absolute;
+top:20px;
+left:20px;
+}
+
+.message{
+margin-top:20px;
+font-size:22px;
+color:#facc15;
+text-align:center;
+}
+
+.score{
+position:fixed;
+top:10px;
+right:10px;
+background:#38bdf8;
+color:black;
+padding:10px 20px;
+border-radius:15px;
+font-weight:bold;
+z-index:999;
+}
+
+
+
+/* BUSCAMINAS */
+
+#mineBoard{
+display:grid;
+grid-template-columns:repeat(10,40px);
+gap:5px;
+margin-top:20px;
+}
+
+.cell{
+width:40px;
+height:40px;
+background:#334155;
+display:flex;
+justify-content:center;
+align-items:center;
+cursor:pointer;
+border-radius:8px;
+font-weight:bold;
+}
+
+.revealed{
+background:#cbd5e1;
+color:black;
+}
+
+.mine{
+background:red;
+}
+
+
+
+/* MEMORAMA */
+
+#memoryBoard{
+display:grid;
+grid-template-columns:repeat(5,90px);
+gap:10px;
+margin-top:20px;
+}
+
+.card{
+width:90px;
+height:90px;
+background:#38bdf8;
+border-radius:15px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:35px;
+cursor:pointer;
+color:transparent;
+transition:0.3s;
+}
+
+.card.flip{
+background:white;
+color:black;
+}
+
+
+
+/* INPUT */
+
+input{
+padding:12px;
+border:none;
+border-radius:10px;
+width:220px;
+text-align:center;
+font-size:18px;
+}
+
+
+
+/* CANVAS */
+
+#snakeCanvas,
+#obstacleCanvas,
+#towerCanvas{
+background:black;
+border:4px solid #38bdf8;
+margin-top:20px;
+}
+
+
+
+/* TRIVIA */
+
+.questionBox{
+background:rgba(255,255,255,0.08);
+padding:20px;
+border-radius:20px;
+width:90%;
+max-width:500px;
+text-align:center;
+}
+
+.option{
+margin-top:15px;
+padding:12px;
+background:#334155;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.option:hover{
+background:#475569;
+}
+
+
+
+/* CONTROLES TOUCH */
+
+.touch-controls{
+display:none;
+gap:15px;
+margin-top:20px;
+flex-wrap:wrap;
+justify-content:center;
+}
+
+.touch-btn{
+width:70px;
+height:70px;
+border:none;
+border-radius:50%;
+font-size:25px;
+background:#38bdf8;
+font-weight:bold;
+cursor:pointer;
+}
+
+
+
+/* RESPONSIVE */
+
+@media(max-width:768px){
+
+h1{
+font-size:35px;
+}
+
+.slogan{
+width:95%;
+font-size:16px;
+}
+
+.menu{
+flex-direction:column;
+align-items:center;
+}
+
+.game-card{
+width:90%;
+}
+
+#mineBoard{
+grid-template-columns:repeat(10,28px);
+}
+
+.cell{
+width:28px;
+height:28px;
+font-size:12px;
+}
+
+#memoryBoard{
+grid-template-columns:repeat(4,65px);
+}
+
+.card{
+width:65px;
+height:65px;
+font-size:25px;
+}
+
+#snakeCanvas,
+#obstacleCanvas,
+#towerCanvas{
+width:300px;
+height:300px;
+}
+
+.touch-controls{
+display:flex;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<!-- PUNTOS -->
+
+<div class="score">
+
+⭐ Puntuación:
+<span id="totalScore">0</span>
+
+</div>
+
+
+
+<!-- MENU -->
+
+<div id="menu" class="screen active">
+
+<h1>TRIADA ULTRA</h1>
+
+<p class="slogan">
+
+8 desafíos. Una misión:
+convertirte en el campeón definitivo.
+
+</p>
+
+<div class="menu">
+
+
+
+<div class="game-card"
+onclick="showScreen('minesweeper')">
+
+<h2>💣 Buscaminas</h2>
+
+<p>
+Encuentra minas usando pistas numéricas.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('memory')">
+
+<h2>🧠 Memorama Neuronal</h2>
+
+<p>
+Encuentra parejas antes del tiempo.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('guess')">
+
+<h2>🎯 Adiviname</h2>
+
+<p>
+Adivina el número secreto.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('snake')">
+
+<h2>🐍 Snake</h2>
+
+<p>
+Come comida y evita perder.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('obstacle')">
+
+<h2>🚧 Esquivame</h2>
+
+<p>
+Esquiva bloques en caída.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('trivia')">
+
+<h2>❓ El Trival</h2>
+
+<p>
+Responde preguntas correctamente.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('tower')">
+
+<h2>🧱 La Torre oscura</h2>
+
+<p>
+Apila bloques sin que se derrumbe.
+</p>
+
+</div>
+
+
+
+<div class="game-card"
+onclick="showScreen('reaction')">
+
+<h2>🧠 EL Tiempo</h2>
+
+<p>
+Memoriza el tiempo y adivínalo.
+</p>
+
+</div>
+
+
+
+</div>
+</div>
+
+
+
+<!-- BUSCAMINAS -->
+
+<div id="minesweeper" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>💣 Buscaminas</h1>
+
+<p>
+Los números indican minas alrededor.
+</p>
+
+<div id="mineBoard"></div>
+
+</div>
+
+
+
+<!-- MEMORAMA -->
+
+<div id="memory" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>🧠 Memorama Neuronal</h1>
+
+<h2 id="timer">
+⏰ Tiempo: 50
+</h2>
+
+<div id="memoryBoard"></div>
+
+<div class="message"
+id="memoryMsg">
+</div>
+
+</div>
+
+
+
+<!-- ADIVINAME -->
+
+<div id="guess" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>🎯 Adiviname</h1>
+
+<input
+type="number"
+id="guessInput"
+placeholder="1-100">
+
+<button class="btn"
+onclick="checkGuess()">
+
+Intentar
+
+</button>
+
+<div class="message"
+id="guessMsg">
+</div>
+
+</div>
+
+
+
+<!-- SNAKE -->
+
+<div id="snake" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>🐍 Snake</h1>
+
+<canvas id="snakeCanvas"
+width="400"
+height="400">
+</canvas>
+
+<div class="touch-controls">
+
+<button class="touch-btn"
+onclick="dx=-20;dy=0;">
+⬅
+</button>
+
+<button class="touch-btn"
+onclick="dx=20;dy=0;">
+➡
+</button>
+
+<button class="touch-btn"
+onclick="dx=0;dy=-20;">
+⬆
+</button>
+
+<button class="touch-btn"
+onclick="dx=0;dy=20;">
+⬇
+</button>
+
+</div>
+
+<div class="message"
+id="snakeMsg">
+</div>
+
+</div>
+
+
+
+<!-- OBSTACULOS -->
+
+<div id="obstacle" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>🚧 Esquivame</h1>
+
+<canvas id="obstacleCanvas"
+width="400"
+height="400">
+</canvas>
+
+<div class="touch-controls">
+
+<button class="touch-btn"
+onclick="movePlayerLeft()">
+⬅
+</button>
+
+<button class="touch-btn"
+onclick="movePlayerRight()">
+➡
+</button>
+
+</div>
+
+<div class="message"
+id="obstacleMsg">
+</div>
+
+</div>
+<!-- TRIVIA -->
+
+<div id="trivia" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>❓El trival</h1>
+
+<div class="questionBox">
+
+<h2 id="question"></h2>
+
+<div id="options"></div>
+
+<div class="message"
+id="triviaMsg">
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- TORRE FISICA -->
+
+<div id="tower" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>🧱 La Torre</h1>
+
+<p>
+Presiona el botón para soltar bloques.
+</p>
+
+<canvas id="towerCanvas"
+width="400"
+height="500">
+</canvas>
+
+<button class="btn"
+onclick="dropPhysicsBlock()">
+
+SOLTAR BLOQUE
+
+</button>
+
+<div class="message"
+id="towerMsg">
+</div>
+
+</div>
+
+
+
+<!-- MEMORIA DE TIEMPO -->
+
+<div id="reaction" class="screen">
+
+<div class="topbar">
+
+<button class="btn"
+onclick="backMenu()">
+
+⬅ Menú
+
+</button>
+
+</div>
+
+<h1>🧠TIME EXPRESS</h1>
+
+<p>
+Memoriza el tiempo mostrado.
+</p>
+
+<h2 id="memoryTimeDisplay">
+0.00 s
+</h2>
+
+<input
+type="number"
+id="timeGuess"
+placeholder="¿Cuánto era?">
+
+<button class="btn"
+onclick="checkTimeGuess()">
+
+Adivinar
+
+</button>
+
+<div class="message"
+id="reactionMsg">
+</div>
+
+</div>
+
+
+
+<script>
+
+/////////////////////////////////////////////////
+// GENERAL
+/////////////////////////////////////////////////
+
+let totalScore = 0;
+
+function addScore(points){
+
+totalScore += points;
+
+document.getElementById("totalScore").innerText =
+totalScore;
+
+}
+
+function showScreen(id){
+
+document.querySelectorAll(".screen").forEach(s=>{
+
+s.classList.remove("active");
+
+});
+
+document.getElementById(id).classList.add("active");
+
+}
+
+function backMenu(){
+
+showScreen("menu");
+
+}
+
+
+
+/////////////////////////////////////////////////
+// BUSCAMINAS
+/////////////////////////////////////////////////
+
+const board =
+document.getElementById("mineBoard");
+
+const mines = 15;
+
+let minePositions = [];
+
+function createBoard(){
+
+board.innerHTML = "";
+
+minePositions = [];
+
+while(minePositions.length < mines){
+
+let pos =
+Math.floor(Math.random()*100);
+
+if(!minePositions.includes(pos)){
+
+minePositions.push(pos);
+
+}
+
+}
+
+for(let i=0;i<100;i++){
+
+const cell =
+document.createElement("div");
+
+cell.classList.add("cell");
+
+cell.addEventListener("click",()=>{
+
+revealCell(cell,i);
+
+});
+
+board.appendChild(cell);
+
+}
+
+}
+
+function revealCell(cell,index){
+
+if(cell.classList.contains("revealed"))
+return;
+
+cell.classList.add("revealed");
+
+if(minePositions.includes(index)){
+
+cell.classList.add("mine");
+
+cell.innerHTML = "💣";
+
+setTimeout(()=>{
+
+alert("💀 PERDISTE");
+
+createBoard();
+
+},300);
+
+}else{
+
+let count = countMines(index);
+
+cell.innerText =
+count === 0 ? "" : count;
+
+addScore(1);
+
+}
+
+}
+
+function countMines(index){
+
+let total = 0;
+
+const row = Math.floor(index / 10);
+const col = index % 10;
+
+for(let r=-1;r<=1;r++){
+
+for(let c=-1;c<=1;c++){
+
+if(r===0 && c===0) continue;
+
+let newRow = row + r;
+let newCol = col + c;
+
+if(
+newRow >=0 &&
+newRow <10 &&
+newCol >=0 &&
+newCol <10
+){
+
+let neighborIndex =
+newRow * 10 + newCol;
+
+if(minePositions.includes(neighborIndex)){
+
+total++;
+
+}
+
+}
+
+}
+
+}
+
+return total;
+
+}
+
+createBoard();
+
+
+
+/////////////////////////////////////////////////
+// MEMORAMA
+/////////////////////////////////////////////////
+
+const emojis = [
+
+"🔥","👾","⚡","🎮","🚀",
+"💎","🧠","🎲","👻","🌟",
+
+"🔥","👾","⚡","🎮","🚀",
+"💎","🧠","🎲","👻","🌟"
+
+];
+
+let shuffled =
+emojis.sort(()=>0.5 - Math.random());
+
+const memoryBoard =
+document.getElementById("memoryBoard");
+
+let firstCard = null;
+let secondCard = null;
+let lock = false;
+let matches = 0;
+
+let timeLeft = 50;
+let timer;
+
+function startTimer(){
+
+clearInterval(timer);
+
+timer = setInterval(()=>{
+
+timeLeft--;
+
+document.getElementById("timer").innerText =
+`⏰ Tiempo: ${timeLeft}`;
+
+if(timeLeft <= 0){
+
+clearInterval(timer);
+
+document.getElementById("memoryMsg").innerText =
+"💀 Tiempo agotado";
+
+lock = true;
+
+}
+
+},1000);
+
+}
+
+function createMemory(){
+
+memoryBoard.innerHTML = "";
+
+matches = 0;
+
+timeLeft = 50;
+
+startTimer();
+
+shuffled.forEach(emoji=>{
+
+const card =
+document.createElement("div");
+
+card.classList.add("card");
+
+card.innerText = emoji;
+
+card.addEventListener("click",()=>{
+
+flipCard(card);
+
+});
+
+memoryBoard.appendChild(card);
+
+});
+
+}
+
+function flipCard(card){
+
+if(lock) return;
+
+if(card.classList.contains("flip"))
+return;
+
+card.classList.add("flip");
+
+if(!firstCard){
+
+firstCard = card;
+
+}else{
+
+secondCard = card;
+
+lock = true;
+
+if(firstCard.innerText === secondCard.innerText){
+
+matches++;
+
+timeLeft++;
+
+addScore(5);
+
+firstCard = null;
+secondCard = null;
+
+lock = false;
+
+if(matches === 10){
+
+clearInterval(timer);
+
+document.getElementById("memoryMsg").innerText =
+"🏆 GANASTE";
+
+}
+
+}else{
+
+setTimeout(()=>{
+
+firstCard.classList.remove("flip");
+
+secondCard.classList.remove("flip");
+
+firstCard = null;
+secondCard = null;
+
+lock = false;
+
+},1000);
+
+}
+
+}
+
+}
+
+createMemory();
+
+
+
+/////////////////////////////////////////////////
+// ADIVINAME
+/////////////////////////////////////////////////
+
+let secret =
+Math.floor(Math.random()*100)+1;
+
+let attempts = 0;
+
+function checkGuess(){
+
+let value =
+Number(document.getElementById("guessInput").value);
+
+let msg =
+document.getElementById("guessMsg");
+
+attempts++;
+
+if(value === secret){
+
+msg.innerHTML =
+"🏆 Correcto";
+
+addScore(20);
+
+secret =
+Math.floor(Math.random()*100)+1;
+
+attempts = 0;
+
+}else if(value < secret){
+
+msg.innerHTML =
+`📉 Más alto | ${7-attempts}`;
+
+}else{
+
+msg.innerHTML =
+`📈 Más bajo | ${7-attempts}`;
+
+}
+
+if(attempts >= 7){
+
+msg.innerHTML =
+"💀 Perdiste";
+
+secret =
+Math.floor(Math.random()*100)+1;
+
+attempts = 0;
+
+}
+
+}
+
+
+
+/////////////////////////////////////////////////
+// SNAKE
+/////////////////////////////////////////////////
+
+const snakeCanvas =
+document.getElementById("snakeCanvas");
+
+const sctx =
+snakeCanvas.getContext("2d");
+
+let snake = [{x:200,y:200}];
+
+let food = {
+x:100,
+y:100
+};
+
+let dx = 20;
+let dy = 0;
+
+function drawSnake(){
+
+sctx.clearRect(0,0,400,400);
+
+sctx.fillStyle = "lime";
+
+snake.forEach(part=>{
+
+sctx.fillRect(part.x,part.y,20,20);
+
+});
+
+sctx.fillStyle = "red";
+
+sctx.fillRect(food.x,food.y,20,20);
+
+let head = {
+
+x:snake[0].x + dx,
+y:snake[0].y + dy
+
+};
+
+snake.unshift(head);
+
+if(head.x === food.x &&
+head.y === food.y){
+
+food = {
+
+x:Math.floor(Math.random()*20)*20,
+y:Math.floor(Math.random()*20)*20
+
+};
+
+addScore(10);
+
+}else{
+
+snake.pop();
+
+}
+
+if(
+head.x < 0 ||
+head.y < 0 ||
+head.x >= 400 ||
+head.y >= 400
+){
+
+snake = [{x:200,y:200}];
+
+document.getElementById("snakeMsg").innerText =
+"💀 Game Over";
+
+}
+
+}
+
+setInterval(drawSnake,120);
+
+document.addEventListener("keydown",(e)=>{
+
+if(e.key==="ArrowUp"){
+dx=0;
+dy=-20;
+}
+
+if(e.key==="ArrowDown"){
+dx=0;
+dy=20;
+}
+
+if(e.key==="ArrowLeft"){
+dx=-20;
+dy=0;
+}
+
+if(e.key==="ArrowRight"){
+dx=20;
+dy=0;
+}
+
+});
+
+
+
+/////////////////////////////////////////////////
+// OBSTACULOS
+/////////////////////////////////////////////////
+
+const obstacleCanvas =
+document.getElementById("obstacleCanvas");
+
+const octx =
+obstacleCanvas.getContext("2d");
+
+let player = {
+
+x:180,
+y:340,
+w:40,
+h:40
+
+};
+
+let obstacles = [];
+
+function movePlayerLeft(){
+
+if(player.x > 0){
+
+player.x -= 25;
+
+}
+
+}
+
+function movePlayerRight(){
+
+if(player.x < 360){
+
+player.x += 25;
+
+}
+
+}
+
+function obstacleGame(){
+
+octx.clearRect(0,0,400,400);
+
+octx.fillStyle = "cyan";
+
+octx.fillRect(
+player.x,
+player.y,
+player.w,
+player.h
+);
+
+if(Math.random()<0.02){
+
+obstacles.push({
+
+x:Math.random()*360,
+y:-40,
+w:40,
+h:40
+
+});
+
+}
+
+octx.fillStyle = "red";
+
+obstacles.forEach((o,index)=>{
+
+o.y += 4;
+
+octx.fillRect(
+o.x,
+o.y,
+o.w,
+o.h
+);
+
+if(
+player.x < o.x + o.w &&
+player.x + player.w > o.x &&
+player.y < o.y + o.h &&
+player.y + player.h > o.y
+){
+
+document.getElementById("obstacleMsg").innerText =
+"💀 Perdiste";
+
+obstacles = [];
+
+player.x = 180;
+
+}
+
+if(o.y > 400){
+
+addScore(2);
+
+obstacles.splice(index,1);
+
+}
+
+});
+
+}
+
+setInterval(obstacleGame,30);
+
+
+
+/////////////////////////////////////////////////
+// TRIVIA
+/////////////////////////////////////////////////
+
+const questions = [
+
+{
+q:"¿Capital de México?",
+o:["CDMX","Monterrey","Cancún"],
+a:"CDMX"
+},
+
+{
+q:"¿Cuánto es 8x8?",
+o:["64","48","88"],
+a:"64"
+},
+
+{
+q:"¿Planeta rojo?",
+o:["Marte","Venus","Tierra"],
+a:"Marte"
+}
+
+];
+
+let currentQuestion = 0;
+
+function loadQuestion(){
+
+let q = questions[currentQuestion];
+
+document.getElementById("question").innerText =
+q.q;
+
+let options =
+document.getElementById("options");
+
+options.innerHTML = "";
+
+q.o.forEach(op=>{
+
+let div =
+document.createElement("div");
+
+div.classList.add("option");
+
+div.innerText = op;
+
+div.onclick = ()=>checkAnswer(op);
+
+options.appendChild(div);
+
+});
+
+}
+
+function checkAnswer(answer){
+
+if(answer === questions[currentQuestion].a){
+
+document.getElementById("triviaMsg").innerText =
+"✅ Correcto";
+
+addScore(15);
+
+}else{
+
+document.getElementById("triviaMsg").innerText =
+"❌ Incorrecto";
+
+}
+
+currentQuestion++;
+
+if(currentQuestion >= questions.length){
+
+currentQuestion = 0;
+
+}
+
+setTimeout(()=>{
+
+document.getElementById("triviaMsg").innerText =
+"";
+
+loadQuestion();
+
+},1000);
+
+}
+
+loadQuestion();
+
+
+
+/////////////////////////////////////////////////
+// TORRE FISICA
+/////////////////////////////////////////////////
+
+const towerCanvas =
+document.getElementById("towerCanvas");
+
+const tctx =
+towerCanvas.getContext("2d");
+
+let physicsBlocks = [];
+
+let currentBlock = {
+
+x:0,
+y:50,
+w:80,
+h:25,
+speed:3,
+dir:1,
+falling:false
+
+};
+
+let towerGoal = 120;
+
+function drawPhysicsTower(){
+
+tctx.clearRect(0,0,400,500);
+
+tctx.fillStyle = "yellow";
+
+tctx.fillRect(0,towerGoal,400,5);
+
+tctx.fillStyle = "#444";
+
+tctx.fillRect(100,470,200,20);
+
+physicsBlocks.forEach(block=>{
+
+tctx.fillStyle = "#38bdf8";
+
+tctx.fillRect(
+block.x,
+block.y,
+block.w,
+block.h
+);
+
+});
+
+tctx.fillStyle = "lime";
+
+tctx.fillRect(
+currentBlock.x,
+currentBlock.y,
+currentBlock.w,
+currentBlock.h
+);
+
+if(!currentBlock.falling){
+
+currentBlock.x +=
+currentBlock.speed * currentBlock.dir;
+
+if(
+currentBlock.x <=0 ||
+currentBlock.x + currentBlock.w >=400
+){
+
+currentBlock.dir *= -1;
+
+}
+
+}else{
+
+currentBlock.y += 5;
+
+checkTowerCollision();
+
+}
+
+requestAnimationFrame(drawPhysicsTower);
+
+}
+
+function dropPhysicsBlock(){
+
+if(currentBlock.falling) return;
+
+currentBlock.falling = true;
+
+}
+
+function checkTowerCollision(){
+
+if(currentBlock.y + currentBlock.h >=470){
+
+placeBlock();
+
+return;
+
+}
+
+for(let block of physicsBlocks){
+
+if(
+currentBlock.y + currentBlock.h >= block.y &&
+currentBlock.y + currentBlock.h <= block.y + 10 &&
+currentBlock.x + currentBlock.w > block.x &&
+currentBlock.x < block.x + block.w
+){
+
+placeBlock();
+
+return;
+
+}
+
+}
+
+}
+
+function placeBlock(){
+
+let support = false;
+
+for(let block of physicsBlocks){
+
+let overlap = Math.min(
+currentBlock.x + currentBlock.w,
+block.x + block.w
+) - Math.max(
+currentBlock.x,
+block.x
+);
+
+if(overlap > currentBlock.w * 0.4){
+
+support = true;
+
+}
+
+}
+
+if(
+physicsBlocks.length > 0 &&
+!support
+){
+
+document.getElementById("towerMsg").innerText =
+"💥 LA TORRE SE DERRUMBÓ";
+
+physicsBlocks = [];
+
+}
+
+physicsBlocks.push({
+
+x:currentBlock.x,
+y:currentBlock.y,
+w:currentBlock.w,
+h:currentBlock.h
+
+});
+
+addScore(5);
+
+if(currentBlock.y <= towerGoal){
+
+document.getElementById("towerMsg").innerText =
+"🏆 GANASTE";
+
+addScore(50);
+
+physicsBlocks = [];
+
+}
+
+currentBlock = {
+
+x:0,
+y:50,
+w:Math.max(40,80 - physicsBlocks.length*3),
+h:25,
+speed:3 + physicsBlocks.length*0.2,
+dir:1,
+falling:false
+
+};
+
+}
+
+drawPhysicsTower();
+
+
+
+/////////////////////////////////////////////////
+// MEMORIA DE TIEMPO
+/////////////////////////////////////////////////
+
+let shownTime = 0;
+
+function startTimeMemory(){
+
+shownTime =
+(Math.random()*5 + 1).toFixed(2);
+
+document.getElementById("memoryTimeDisplay").innerText =
+shownTime + " s";
+
+setTimeout(()=>{
+
+document.getElementById("memoryTimeDisplay").innerText =
+"???";
+
+},2000);
+
+}
+
+function checkTimeGuess(){
+
+let guess =
+Number(document.getElementById("timeGuess").value);
+
+let difference =
+Math.abs(guess - shownTime);
+
+if(difference <= 0.3){
+
+document.getElementById("reactionMsg").innerText =
+"🏆 PERFECTO";
+
+addScore(20);
+
+}else if(difference <= 1){
+
+document.getElementById("reactionMsg").innerText =
+"👍 CERCA";
+
+addScore(10);
+
+}else{
+
+document.getElementById("reactionMsg").innerText =
+"❌ MUY LEJOS";
+
+}
+
+startTimeMemory();
+
+}
+
+startTimeMemory();
+
+</script>
+
+</body>
+</html>
